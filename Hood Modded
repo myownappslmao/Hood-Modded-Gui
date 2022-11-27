@@ -1,0 +1,807 @@
+			local P = Instance.new("Part", mod)
+						P.FormFactor = "Custom"
+						P.Material = "Neon"-- Gui to Lua
+-- Version: 3.2
+
+-- Instances:
+
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local Frame_2 = Instance.new("Frame")
+local UICorner_2 = Instance.new("UICorner")
+local TextLabel = Instance.new("TextLabel")
+local Aimlock = Instance.new("TextButton")
+local UICorner_3 = Instance.new("UICorner")
+local Esp = Instance.new("TextButton")
+local UICorner_4 = Instance.new("UICorner")
+
+--Properties:
+
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+Frame.Parent = ScreenGui
+Frame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+Frame.Position = UDim2.new(0.504734874, 0, 0.164658636, 0)
+Frame.Size = UDim2.new(0, 195, 0, 100)
+
+UICorner.Parent = Frame
+
+Frame_2.Parent = Frame
+Frame_2.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Frame_2.Size = UDim2.new(0, 195, 0, 32)
+
+UICorner_2.Parent = Frame_2
+
+TextLabel.Parent = Frame_2
+TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.BackgroundTransparency = 1.000
+TextLabel.Position = UDim2.new(-0.00295746326, 0, -0.0228413641, 0)
+TextLabel.Size = UDim2.new(0, 195, 0, 32)
+TextLabel.Font = Enum.Font.SourceSans
+TextLabel.Text = "Hood Customs Gui"
+TextLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+TextLabel.TextSize = 14.000
+
+Aimlock.Name = "Aimlock"
+Aimlock.Parent = Frame
+Aimlock.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Aimlock.Position = UDim2.new(0.0568473041, 0, 0.422971904, 0)
+Aimlock.Size = UDim2.new(0, 78, 0, 41)
+Aimlock.Font = Enum.Font.SourceSans
+Aimlock.Text = "Aimlock"
+Aimlock.TextColor3 = Color3.fromRGB(0, 0, 0)
+Aimlock.TextSize = 14.000
+Aimlock.MouseButton1Down:connect(function()
+	--.gg/lockers runs you
+	--Made by Ak1x_04
+
+	getgenv().Prediction = 0.13
+	getgenv().AimPart = "HumanoidRootPart"
+	getgenv().Key = "Y"
+	getgenv().DisableKey = "P"
+
+	getgenv().FOV = true
+	getgenv().ShowFOV = false
+	getgenv().FOVSize = 55
+
+	--// Variables (Service)
+
+	local Players = game:GetService("Players")
+	local RS = game:GetService("RunService")
+	local WS = game:GetService("Workspace")
+	local GS = game:GetService("GuiService")
+	local SG = game:GetService("StarterGui")
+
+	--// Variables (regular)
+
+	local LP = Players.LocalPlayer
+	local Mouse = LP:GetMouse()
+	local Camera = WS.CurrentCamera
+	local GetGuiInset = GS.GetGuiInset
+
+	local AimlockState = true
+	local Locked
+	local Victim
+
+	local SelectedKey = getgenv().Key
+	local SelectedDisableKey = getgenv().DisableKey
+
+	--// Notification function
+
+	function Notify(tx)
+		SG:SetCore("SendNotification", {
+			Title = "Ak1x_04 on discord",
+			Text = tx,
+			Duration = 5
+		})
+	end
+
+	--// Check if aimlock is loaded
+
+	if getgenv().Loaded == true then
+		Notify("Aimlock is already loaded!")
+		return
+	end
+
+	getgenv().Loaded = true
+
+	--// FOV Circle
+
+	local fov = Drawing.new("Circle")
+	fov.Filled = false
+	fov.Transparency = 1
+	fov.Thickness = 1
+	fov.Color = Color3.fromRGB(255, 255, 0)
+	fov.NumSides = 1000
+
+	--// Functions
+
+	function update()
+		if getgenv().FOV == true then
+			if fov then
+				fov.Radius = getgenv().FOVSize * 2
+				fov.Visible = getgenv().ShowFOV
+				fov.Position = Vector2.new(Mouse.X, Mouse.Y + GetGuiInset(GS).Y)
+
+				return fov
+			end
+		end
+	end
+
+	function WTVP(arg)
+		return Camera:WorldToViewportPoint(arg)
+	end
+
+	function WTSP(arg)
+		return Camera.WorldToScreenPoint(Camera, arg)
+	end
+
+	function getClosest()
+		local closestPlayer
+		local shortestDistance = math.huge
+
+		for i, v in pairs(game.Players:GetPlayers()) do
+			local notKO = v.Character:WaitForChild("BodyEffects")["K.O"].Value ~= true
+			local notGrabbed = v.Character:FindFirstChild("GRABBING_COINSTRAINT") == nil
+
+			if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health ~= 0 and v.Character:FindFirstChild(getgenv().AimPart) and notKO and notGrabbed then
+				local pos = Camera:WorldToViewportPoint(v.Character.PrimaryPart.Position)
+				local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude
+
+				if (getgenv().FOV) then
+					if (fov.Radius > magnitude and magnitude < shortestDistance) then
+						closestPlayer = v
+						shortestDistance = magnitude
+					end
+				else
+					if (magnitude < shortestDistance) then
+						closestPlayer = v
+						shortestDistance = magnitude
+					end
+				end
+			end
+		end
+		return closestPlayer
+	end
+
+	--// Checks if key is down
+
+	Mouse.KeyDown:Connect(function(k)
+		SelectedKey = SelectedKey:lower()
+		SelectedDisableKey = SelectedDisableKey:lower()
+		if k == SelectedKey then
+			if AimlockState == true then
+				Locked = not Locked
+				if Locked then
+					Victim = getClosest()
+
+					Notify("Locked onto: "..tostring(Victim.Character.Humanoid.DisplayName))
+				else
+					if Victim ~= nil then
+						Victim = nil
+
+						Notify("Unlocked!")
+					end
+				end
+			else
+				Notify("Aimlock is not enabled!")
+			end
+		end
+		if k == SelectedDisableKey then
+			AimlockState = not AimlockState
+		end
+	end)
+
+	--// Loop update FOV and loop camera lock onto target
+
+	RS.RenderStepped:Connect(function()
+		update()
+		if AimlockState == true then
+			if Victim ~= nil then
+				Camera.CFrame = CFrame.new(Camera.CFrame.p, Victim.Character[getgenv().AimPart].Position + Victim.Character[getgenv().AimPart].Velocity*getgenv().Prediction)
+			end
+		end
+	end)
+	while wait() do
+		if getgenv().AutoPrediction == true then
+			local pingvalue = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+			local split = string.split(pingvalue,'(')
+			local ping = tonumber(split[1])
+			if ping < 225 then
+				getgenv().Prediction = 1.4
+			elseif ping < 215 then
+				getgenv().Prediction = 1.2
+			elseif ping < 205 then
+				getgenv().Prediction = 1.0
+			elseif ping < 190 then
+				getgenv().Prediction = 0.10
+			elseif ping < 180 then
+				getgenv().Prediction = 0.12
+			elseif ping < 170 then
+				getgenv().Prediction = 0.15
+			elseif ping < 160 then
+				getgenv().Prediction = 0.18
+			elseif ping < 150 then
+				getgenv().Prediction = 0.110
+			elseif ping < 140 then
+				getgenv().Prediction = 0.113
+			elseif ping < 130 then
+				getgenv().Prediction = 0.116
+			elseif ping < 120 then
+				getgenv().Prediction = 0.120
+			elseif ping < 110 then
+				getgenv().Prediction = 0.124
+			elseif ping < 105 then
+				getgenv().Prediction = 0.127
+			elseif ping < 90 then
+				getgenv().Prediction = 0.130
+			elseif ping < 80 then
+				getgenv().Prediction = 0.133
+			elseif ping < 70 then
+				getgenv().Prediction = 0.136
+			elseif ping < 60 then
+				getgenv().Prediction = 0.15038
+			elseif ping < 50 then
+				getgenv().Prediction = 0.15038
+			elseif ping < 40 then
+				getgenv().Prediction = 0.145
+			elseif ping < 30 then
+				getgenv().Prediction = 0.155
+			elseif ping < 20 then
+				getgenv().Prediction = 0.157
+			end
+		end
+	end
+end)
+UICorner_3.Parent = Aimlock
+
+Esp.Name = "Esp"
+Esp.Parent = Frame
+Esp.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Esp.Position = UDim2.new(0.554778516, 0, 0.422971904, 0)
+Esp.Size = UDim2.new(0, 78, 0, 41)
+Esp.Font = Enum.Font.SourceSans
+Esp.Text = "Esp"
+Esp.TextColor3 = Color3.fromRGB(0, 0, 0)
+Esp.TextSize = 14.000
+Esp.MouseButton1Down:connect(function()
+	local plr = game.Players.LocalPlayer
+	local Char = script.Parent
+	local UIS = game:GetService("UserInputService")
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local boom = Instance.new("Part")
+
+	local Key = 'E'
+	local Debounce = true
+
+	UIS.InputBegan:Connect(function(Input, IsTyping)
+		if IsTyping then return end
+		if Input.KeyCode == Enum.KeyCode[Key] and Debounce then
+			Debounce = false
+			boom.Shape = "Ball"
+			local TweenService = game:GetService("TweenService")
+
+			local Plrs = game:GetService('Players')
+			local MyPlr = Plrs.LocalPlayer
+			repeat
+				wait()
+			until MyPlr.Character ~= nil
+			local MyChar = MyPlr.Character
+			local MyGui = game:GetService('CoreGui')
+			local RunS = game:GetService('RunService')
+			local Teams = game:GetService('Teams')
+			local C = workspace.CurrentCamera
+			repeat
+				RunS.RenderStepped:wait()
+			until C.ViewportSize.X > 0 and C.ViewportSize.Y > 0
+
+
+			local Settings = {
+				KeyCodeToToggle = 285, 
+				KeyCodeToScrollRight = 275, 
+				KeyCodeToScrollLeft = 276,
+				ColorCodes = {
+					Enemy = Color3.new(1, 0, 0), 
+					Ally = Color3.new(0, 1, 0), 
+				},
+				ShowTracers = true,
+				TracerOptions = {
+					ShowEnemies = true, 
+					ShowAllies = true,
+				},
+				ShowESP = true,
+				ESPOptions = {
+					ShowEnemies = true,
+					ShowAllies = true,
+					ShowHealth = true,
+					ShowName = true,
+					ShowDistance = true,
+				},
+				PlayerESPCrap = {},
+				PlayerCrap = {},
+				FakeCrap = {},
+			}
+			local CC = Settings.ColorCodes
+			local TO = Settings.TracerOptions
+			local ESPO = Settings.ESPOptions
+			local PESPC = Settings.PlayerESPCrap
+			local PC = Settings.PlayerCrap
+
+			local DONT_IGNORE = {
+				"Head",
+				"Torso",
+				"HumanoidRootPart",
+				"Left Arm",
+				"Right Arm",
+				"Left Leg",
+				"Right Leg",
+			}
+
+			function CheckNameToDontIgnore(Str)
+				for i, v in pairs(DONT_IGNORE) do
+					if (Str == v) then
+						return true
+					end
+				end
+
+				return false
+			end
+
+			local Called = 0
+			function AddShitToIgnoreList(Par)
+				Called = Called + 1
+				local Hint = Instance.new("Hint", workspace)
+				Hint.Text = "Called: " .. Called
+				-- Don't judge...
+				print("Preparing ESP...")
+				print("This could take a while...")
+				wait(5)
+				local function ScanEverything(Par)
+					for i, v in pairs(Par:GetChildren()) do
+						if not (CheckNameToDontIgnore(v.Name)) then
+							table.insert(Settings.FakeCrap, v)
+							print("Added " .. v.Name)
+							v.ChildAdded:connect(function(EEEE)
+								ScanEverything(EEEE)
+							end)
+							ScanEverything(v)
+						else
+							ScanEverything(v)
+						end
+					end
+				end
+
+				local function Scan(Par)
+					for i, v in pairs(Par:GetChildren()) do
+						if not (Plrs:FindFirstChild(v.Name)) then
+							table.insert(Settings.FakeCrap, v)
+							print("Added " .. v.Name)
+						else
+							ScanEverything(v)
+						end
+						RunS.RenderStepped:wait()
+					end
+				end
+				Scan(Par)
+			end
+
+			function RecursiveGetChildren(Par)
+				local returnValue = {}
+
+				local rgc
+				rgc = function(Par)
+					for i, c in next, Par:GetChildren() do
+						table.insert(returnValue, c)
+						rgc(c)
+					end
+				end
+
+				rgc(Par)
+
+				return returnValue
+			end
+
+			function CheckCameraForPlrModel(Plr)
+				local Find = C:FindFirstChild("ESPStuff " .. Plr.Name)
+				if (Find) then
+					local Find2 = Find:FindFirstChild("Tracer Stuff")
+					if not (Find2) then
+						local T = Instance.new("Model", Find)
+						T.Name = "Tracer Stuff"
+					end
+					Find2 = Find:FindFirstChild("ESP Stuff")
+					if not (Find2) then
+						local T = Instance.new("Model", Find)
+						T.Name = "ESP Stuff"
+					end
+					return Find
+				end
+				local mod = Instance.new("Model", C)
+				mod.Name = "ESPStuff " .. Plr.Name
+				local T = Instance.new("Model", mod)
+				T.Name = "Tracer Stuff"
+				local ESP = Instance.new("Model", mod)
+				ESP.Name = "ESP Stuff"
+				return mod
+			end
+
+			function UpdateTracerCrap(What, Plr)
+				if ((MyPlr.Character ~= nil and Plr.Character ~= nil) and (MyPlr.Character.PrimaryPart ~= nil and Plr.Character.PrimaryPart ~= nil)) then
+					if ((MyPlr.Character.PrimaryPart.Position - Plr.Character.PrimaryPart.Position).magnitude < 2000) then
+						local P = What.Part
+						P.Transparency = 0
+						local M = P.Mesh
+						if (Plr.Character == nil) then -- Only if the player character is nil do we wait for it, or updating the tracer would be laggy as fuck
+							repeat
+								RunS.RenderStepped:wait()
+							until Plr.Character ~= nil
+						end
+						local R = C:ScreenPointToRay(C.ViewportSize.X / 2, C.ViewportSize.Y, 0)
+						local Dist = (R.Origin - (Plr.Character.PrimaryPart.Position - Vector3.new(0, 3, 0))).magnitude
+						P.Size = Vector3.new(0.1, 0.1, Dist)
+						P.CFrame = CFrame.new(R.Origin, (Plr.Character.PrimaryPart.Position - Vector3.new(0, 4.5, 0))) * CFrame.new(0, 0, -Dist / 2)
+						P.BrickColor = BrickColor.new(
+							#Teams:GetChildren() > 0 and (
+							Plr.TeamColor == MyPlr.TeamColor and CC.Ally or
+								Plr.TeamColor ~= MyPlr.TeamColor and CC.Enemy
+							) or #Teams:GetChildren() <= 0 and CC.Enemy
+						)
+						M.Scale = Vector3.new(0.05, 0.05, P.Size.Z / Dist)
+					else
+						local P = What.Part
+						P.Transparency = 1
+					end
+				end
+			end
+
+
+			local Aim = 1
+			function UpdateESPGui(HealthBar, HealthTxt, Plr, DistTxt, PlrName)
+				if (Plr.Character == nil) then
+					repeat
+						RunS.RenderStepped:wait()
+					until Plr.Character ~= nil
+				end
+				if ((Plr.Character.PrimaryPart.Position - MyPlr.Character.PrimaryPart.Position).magnitude <= 2000) then
+					HealthBar.Parent.Parent.Visible = true
+				else
+					HealthBar.Parent.Parent.Visible = false
+				end
+				HealthBar.Size = UDim2.new(Plr.Character.Humanoid.Health / Plr.Character.Humanoid.MaxHealth, -2, 1, -2)
+				HealthTxt.Text = math.floor(Plr.Character.Humanoid.Health) .. "/" .. math.floor(Plr.Character.Humanoid.MaxHealth)
+				local Dist = (Plr.Character.PrimaryPart.Position - MyPlr.Character.PrimaryPart.Position).magnitude
+				DistTxt.Text = math.floor(Dist) .. " Studs"
+				PlrName.TextColor3 = (
+					#Teams:GetChildren() > 0 and (
+					Plr.TeamColor == MyPlr.TeamColor and CC.Ally or
+						Plr.TeamColor ~= MyPlr.TeamColor and CC.Enemy
+					) or #Teams:GetChildren() <= 0 and CC.Enemy
+				)
+				DistTxt.TextColor3 = (
+					#Teams:GetChildren() > 0 and (
+					Plr.TeamColor == MyPlr.TeamColor and CC.Ally or
+						Plr.TeamColor ~= MyPlr.TeamColor and CC.Enemy
+					) or #Teams:GetChildren() <= 0 and CC.Enemy
+				)
+			end
+
+			function UpdateESPCrap(What, Plr)
+				if ((MyPlr.Character ~= nil and Plr.Character ~= nil) and (MyPlr.Character.PrimaryPart ~= nil and Plr.Character.PrimaryPart ~= nil)) then
+					if ((MyPlr.Character.PrimaryPart.Position - Plr.Character.PrimaryPart.Position).magnitude < 2000) then
+						if (PC[Plr] ~= nil) then
+							local viewpoint = C.CoordinateFrame
+
+							local PDists = {}
+							for i, p in next, PC[Plr] do
+								table.insert(PDists, (viewpoint.p - i.Position).magnitude)
+							end
+
+							local nearestDistance = math.min(unpack(PDists))
+							local furthestDistance = math.max(unpack(PDists))
+
+							for i, p in next, PC[Plr] do
+								local O, M, S = unpack(p)
+
+
+								local Dist = (i.Position - viewpoint.p).magnitude
+								local DistMult = Aim + (Dist - nearestDistance) / (furthestDistance - nearestDistance)
+
+								O.Transparency = math.max(S + (i.Transparency * (1 - S)), 0.001)
+
+								local unit = (i.Position - viewpoint.p).unit * DistMult
+								local pos = viewpoint.p + unit
+
+								local OF = CFrame.new(pos) * CFrame.Angles(i.CFrame:toEulerAnglesXYZ())
+
+								O.CFrame = OF
+
+								local OS = DistMult / Dist
+
+								if (M == nil) then
+									O.Mesh.Scale = i.Size * OS
+								else
+									if (M:IsA("SpecialMesh") and M.MeshType.Name == "FileMesh") or (M:IsA("SpecialMesh") == false) then
+										O[M.Name].Scale = M.Scale * OS
+									else
+										O[M.Name].Scale = M.Scale * i.Size * OS
+									end
+								end
+
+								O.BrickColor = BrickColor.new(
+									#Teams:GetChildren() > 0 and (
+									Plr.TeamColor == MyPlr.TeamColor and CC.Ally or
+										Plr.TeamColor ~= MyPlr.TeamColor and CC.Enemy
+									) or #Teams:GetChildren() <= 0 and CC.Enemy
+								)
+							end
+
+							--print("Running")
+							local Mouse = MyPlr:GetMouse()
+							local R = Ray.new(Mouse.UnitRay.Origin, Mouse.UnitRay.Direction * 5000)
+							local RP = workspace:FindPartOnRayWithIgnoreList(R, Settings.FakeCrap, false, true)
+							if (RP ~= nil) then
+								local Find = Plrs:FindFirstChild(RP.Parent.Name) or Plrs:FindFirstChild(string.sub(RP.Parent.Name, string.len("ESPStuff ") + 1))
+								if ((Find and Find:IsA("Player")) and (Find ~= MyPlr and Find == Plr)) then
+									Aim = 500000
+									wait(3)
+								else
+									Aim = 1
+								end
+							else
+								Aim = 1
+							end
+						end
+					end
+				end
+			end
+
+			function CreateESPStuff(Plr)
+				local ESPModel = CheckCameraForPlrModel(Plr)
+				PESPC[Plr] = ESPModel
+				if (Settings.ShowTracers) then
+					local T = ESPModel["Tracer Stuff"]
+					if not (T:FindFirstChild(Plr.Name)) then
+						local mod = Instance.new("Model", T)
+						mod.Name = Plr.Name
+			
+						P.Transparency = 0
+						P.Anchored = true
+						P.Locked = true
+						P.CanCollide = false
+						table.insert(Settings.FakeCrap, P)
+						local M = Instance.new("BlockMesh", P)
+						RunS:BindToRenderStep("TracerUpdate " .. Plr.Name, Enum.RenderPriority.Character.Value - 1, function()
+							UpdateTracerCrap(mod, Plr)
+						end)
+					end
+				end
+				if (Settings.ShowESP) then
+					local ESP = ESPModel["ESP Stuff"]
+					local mod = Instance.new("Model", ESP)
+					mod.Name = Plr.Name
+					repeat
+						RunS.RenderStepped:wait()
+					until Plr.Character ~= nil
+					for i, v in next, RecursiveGetChildren(Plr.Character) do
+						if (v:IsA("BasePart")) then
+							local O = Instance.new("Part", mod)
+							O.Anchored = true
+							O.CanCollide = false
+							O.FormFactor = "Custom"
+							O.Size = Vector3.new(1, 1, 1)
+							O.Name = "Fake " .. v.Name
+							O.Material = "SmoothPlastic"
+							O.TopSurface = "SmoothNoOutlines"
+							O.BottomSurface = "SmoothNoOutlines"
+							O.FrontSurface = "SmoothNoOutlines"
+							O.BackSurface = "SmoothNoOutlines"
+							O.LeftSurface = "SmoothNoOutlines"
+							O.RightSurface = "SmoothNoOutlines"
+
+							local P = nil
+							local PMesh = nil
+							for ii, vv in next, RecursiveGetChildren(v) do
+								if (vv:IsA("DataModelMesh")) then
+									local ThisPMesh = vv:clone()
+
+									local meshChanged = vv.Changed:connect(function(Prop)
+										if (Prop == "MeshType" or Prop == "MeshId" or Prop == "TextureProp") then
+											ThisPMesh[Prop] = vv[Prop]
+										end
+									end)
+
+									PMesh = ThisPMesh
+								elseif (vv:IsA("FaceInstance")) then
+									vv:clone().Parent = O
+								end
+							end
+
+							if (PMesh == nil) then
+								local M = Instance.new("BlockMesh", O)
+							else
+								PMesh:clone().Parent = O
+							end
+
+							if (O.Name == "Fake Head") then
+								local Info = Instance.new("BillboardGui", O.Mesh)
+								Info.Name = "ESPStats"
+								Info.Adornee = O
+								Info.Size = UDim2.new(0, 100, 0, 75)
+								Info.ExtentsOffset = Vector3.new(0, 0.3, 0)
+
+								local Stats = Instance.new("Frame", Info)
+								Stats.BackgroundTransparency = 1
+								Stats.Name = "Stats"
+								Stats.Size = UDim2.new(1, 0, 1, 0)
+								Stats.Visible = false
+
+								local Health = Instance.new("Frame", Stats)
+								Health.Name = "HealthBG"
+								Health.BackgroundColor3 = Color3.new(0, 0, 0)
+								Health.BorderSizePixel = 0
+								Health.Position = UDim2.new(0, 0, 0, 25)
+								Health.Size = UDim2.new(1, 0, 0, 25)
+
+								local HealthBG = Instance.new("Frame", Health)
+								HealthBG.Name = "Health"
+								HealthBG.BackgroundColor3 = Color3.new(0, 1, 0)
+								HealthBG.BorderSizePixel = 0
+								HealthBG.Position = UDim2.new(0, 1, 0, 1)
+								HealthBG.Size = UDim2.new(1, -2, 1, -2)
+
+								local HealthNum = Instance.new("TextLabel", Health)
+								HealthNum.Name = "HealthNum"
+								HealthNum.BackgroundTransparency = 1
+								HealthNum.Size = UDim2.new(1, 0, 1, 0)
+								HealthNum.Font = "Legacy"
+								HealthNum.FontSize = "Size8"
+								HealthNum.Text = "???"
+								HealthNum.TextColor3 = Color3.new(1, 0, 0)
+
+								local PlrName = Instance.new("TextLabel", Stats)
+								PlrName.Name = "PlrName"
+								PlrName.BackgroundTransparency = 1
+								PlrName.Size = UDim2.new(1, 0, 0, 25)
+								PlrName.Font = "Legacy"
+								PlrName.FontSize = "Size8"
+								PlrName.Text = Plr.Name
+								PlrName.TextColor3 = (
+									#Teams:GetChildren() > 0 and (
+									Plr.TeamColor == MyPlr.TeamColor and CC.Ally or
+										Plr.TeamColor ~= MyPlr.TeamColor and CC.Enemy
+									) or #Teams:GetChildren() <= 0 and CC.Enemy
+								)
+
+								local PlrDist = PlrName:clone()
+								PlrDist.Parent = PlrName.Parent
+								PlrDist.Name = "Dist"
+								PlrDist.Text = "???"
+								PlrDist.Position = UDim2.new(0, 0, 0, 50)
+								PlrDist.TextColor3 = (
+									#Teams:GetChildren() > 0 and (
+									Plr.TeamColor == MyPlr.TeamColor and CC.Ally or
+										Plr.TeamColor ~= MyPlr.TeamColor and CC.Enemy
+									) or #Teams:GetChildren() <= 0 and CC.Enemy
+								)
+								RunS:BindToRenderStep("UpdateESPGui " .. Plr.Name, Enum.RenderPriority.Character.Value - 1, function()
+									UpdateESPGui(HealthBG, HealthNum, Plr, PlrDist, PlrName)
+								end)
+							end
+
+							if (PC[Plr] == nil) then
+								PC[Plr] = {}
+							end
+							PC[Plr][v] = {O, PMesh, 0}
+							table.insert(Settings.FakeCrap, O)
+							table.insert(Settings.FakeCrap, PMesh)
+						end
+					end
+					RunS:BindToRenderStep("UpdateESP " .. Plr.Name, Enum.RenderPriority.Character.Value - 1, function()
+						UpdateESPCrap(mod, Plr)
+					end)
+				end
+			end
+
+			function RemoveESP(Plr)
+				RunS:UnbindFromRenderStep("UpdateESP " .. Plr.Name)
+				RunS:UnbindFromRenderStep("UpdateESPGui " .. Plr.Name)
+				local Find = C:FindFirstChild("ESPStuff " .. Plr.Name)
+				if (Find) then
+					Find = Find:FindFirstChild("ESP Stuff")
+					if (Find) then
+						Find:Destroy()
+					end
+				end
+				PC[Plr] = {}
+			end
+
+			function OnCharacterAdded(Char, Plr)
+				RemoveESP(Plr)
+				CreateESPStuff(Plr)
+				-- Added shit to ingore list
+			end
+
+			function OnPlayerAdded(Plr)
+				CreateESPStuff(Plr)
+				Plr.CharacterAdded:connect(function(Char)
+					OnCharacterAdded(Char, Plr)
+				end)
+			end
+
+			function OnPlayerRemoved(Plr)
+				RunS:UnbindFromRenderStep("TracerUpdate " .. Plr.Name)
+				RunS:UnbindFromRenderStep("UpdateESP " .. Plr.Name)
+				RunS:UnbindFromRenderStep("UpdateESPGui " .. Plr.Name)
+				local Find = C:FindFirstChild("ESPStuff " .. Plr.Name)
+				if (Find) then
+					Find:Destroy()
+				end
+			end
+
+			function GetCurrentPlayers()
+				for i, v in pairs(Plrs:GetPlayers()) do
+					if (v ~= MyPlr) then
+						CreateESPStuff(v)
+						v.CharacterAdded:connect(function(Char)
+							OnCharacterAdded(Char, v)
+						end)
+					end
+				end
+			end
+
+			print("Please wait....")
+			wait(0.5)
+			AddShitToIgnoreList(workspace)
+			GetCurrentPlayers()
+			Plrs.PlayerAdded:connect(OnPlayerAdded)
+			Plrs.PlayerRemoving:connect(OnPlayerRemoved)
+		end
+	end)
+end)
+UICorner_4.Parent = Esp
+
+-- Scripts:
+
+local function DKHT_fake_script() -- Frame.Dragify 
+	local script = Instance.new('LocalScript', Frame)
+
+	local UIS = game:GetService("UserInputService")
+	function dragify(Frame)
+		dragToggle = nil
+		dragSpeed = 0.15
+		dragInput = nil
+		dragStart = nil
+		dragPos = nil
+		function updateInput(input)
+			Delta = input.Position - dragStart
+			Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + Delta.X, startPos.Y.Scale, startPos.Y.Offset + Delta.Y)
+			game:GetService("TweenService"):Create(Frame, TweenInfo.new(0.15), {Position = Position}):Play()
+		end
+		Frame.InputBegan:Connect(function(input)
+			if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and UIS:GetFocusedTextBox() == nil then
+				dragToggle = true
+				dragStart = input.Position
+				startPos = Frame.Position
+				input.Changed:Connect(function()
+					if input.UserInputState == Enum.UserInputState.End then
+						dragToggle = false
+					end
+				end)
+			end
+		end)
+		Frame.InputChanged:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+				dragInput = input
+			end
+		end)
+		game:GetService("UserInputService").InputChanged:Connect(function(input)
+			if input == dragInput and dragToggle then
+				updateInput(input)
+			end
+		end)
+	end
+	dragify(script.Parent)
+	
+end
+coroutine.wrap(DKHT_fake_script)()
